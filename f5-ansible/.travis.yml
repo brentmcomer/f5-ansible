@@ -1,0 +1,36 @@
+sudo: required
+
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+
+before_install:
+  # NOTE: this is probably not required since you're not trying to pull or
+  # push from a GitHub repo
+  - git config --global user.email "OpenStack_TravisCI@f5.com"
+  - git config --global user.name "Travis F5 Openstack"
+
+install:
+  - travis_retry sudo apt-get update
+  - travis_retry sudo apt-get -y install libffi-dev libssl-dev
+  - travis_retry pip install --upgrade setuptools pip
+  - travis_retry pip install cffi
+  - travis_retry pip install --upgrade -r requirements.test.txt
+
+script:
+  - make all-tests
+  - make docker-test
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  on:
+    branch: devel
+    # only deploy to clouddocs after one build; python 3.5 chosen arbitrarily
+    python: '3.5'
+    repo: F5Networks/f5-ansible
+  script:
+    - make docker-deploy
